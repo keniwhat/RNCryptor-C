@@ -38,8 +38,8 @@ MAN1DIR = $(DESTDIR)$(man1dir)
 MANPAGE= 
 
 OPENSSL_DIR=/usr/local/opt/openssl/
-OPENSSL_INC=-I/usr/local/opt/openssl//include
-OPENSSL_LIBS=-L/Users/ken/Projects/misc/openssl -lssl -lcrypto 
+OPENSSL_INC=-I/usr/local/opt/openssl/include
+OPENSSL_LIBS=-r$HOME/Projects/misc/openssl_universal -lssl -lcrypto 
 
 STRIP=/usr/bin/strip
 
@@ -52,7 +52,7 @@ CFLAGS= -g -O2 -Wall $(DEFINES)
 CFLAGS_X86 := $(CFLAGS) -target x86_64-apple-macos10.13
 CFLAGS_ARM := $(CFLAGS) -target arm64-apple-macos11
 
-LIBS=$(LIBNAME) $(OPENSSL_LIBS)
+LIBS=$(LIBNAME)
 
 SRCS = rncryptor_c.c mutils.c
 OBJS_X86 = x86/rncryptor_c.o x86/mutils.o
