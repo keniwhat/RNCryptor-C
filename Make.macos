@@ -5,12 +5,17 @@
 srcdir = .
 
 top_srcdir = .
-CC= gcc
+#CC= gcc
+CC 	  := /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
+SDK 	  := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+
 DEFS= -DPACKAGE_NAME=\"\" -DPACKAGE_TARNAME=\"\" -DPACKAGE_VERSION=\"\" -DPACKAGE_STRING=\"\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE_URL=\"\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_STRING_H=1 -DHAVE_STRINGS_H=1 -DHAVE_MEMORY_H=1 -DHAVE_UNISTD_H=1 -DHAVE_CTYPE_H=1 -DHAVE_STDINT_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_STDLIB_H=1 -DHAVE_FCNTL_H=1 -DHAVE_SYS_FILE_H=1 -DHAVE_LIMITS_H=1 -DHAVE_SYS_SYSLIMITS_H=1 -DHAVE_RAND_R=1 -DHAVE_SOCKET=1 -DHAVE_GETADDRINFO=1 -DSIZEOF_VOID_P=8 -DHAVE_OPENSSL=1 -DUNIX
 AR= /usr/bin/ar
 ARFLAGS = cruv
 RANLIB= ranlib
 LIBNAME= librncryptorc.a
+LIBNAME_X86= x86/librncryptorc.a
+LIBNAME_ARM= arm/librncryptorc.a
 PROGNAME= 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL}
@@ -34,31 +39,49 @@ MANPAGE=
 
 OPENSSL_DIR=/usr/local/opt/openssl/
 OPENSSL_INC=-I/usr/local/opt/openssl//include
-OPENSSL_LIBS=-L/usr/local/opt/openssl//lib -lssl -lcrypto 
+OPENSSL_LIBS=-L/Users/ken/Projects/misc/openssl -lssl -lcrypto 
 
 STRIP=/usr/bin/strip
 
-INCLUDES=  -I. $(OPENSSL_INC)
+INCLUDES=  -I. $(OPENSSL_INC) -I$(SDK)/usr/include
 
 DEFINES= $(INCLUDES) $(DEFS) -DHAVE_STRING_H=1 -DHAVE_STDLIB_H=1 \
 	-DHAVE_MATH_H=1
 
 CFLAGS= -g -O2 -Wall $(DEFINES)
+CFLAGS_X86 := $(CFLAGS) -target x86_64-apple-macos10.13
+CFLAGS_ARM := $(CFLAGS) -target arm64-apple-macos11
+
 LIBS=$(LIBNAME) $(OPENSSL_LIBS)
 
 SRCS = rncryptor_c.c mutils.c
-OBJS = rncryptor_c.o mutils.o
+OBJS_X86 = x86/rncryptor_c.o x86/mutils.o
+OBJS_ARM = arm/rncryptor_c.o arm/mutils.o
 
-.c.o:
-	rm -f $@
-	$(CC) $(CFLAGS) -c $*.c
 
-all: $(LIBNAME) examples
 
-$(LIBNAME) : $(OBJS)
-	rm -f $@
-	$(AR) $(ARFLAGS) $@ $(OBJS)
-	$(RANLIB) $@
+
+x86/%.o: $(SRCS)
+	test -d x86  || mkdir x86 
+	$(CC) $(CFLAGS_X86) -c $*.c -o $@
+
+arm/%.o: $(SRCS)
+	test -d arm  || mkdir arm 
+	$(CC) $(CFLAGS_ARM) -c $*.c -o $@
+
+
+all: $(LIBNAME) 
+
+
+$(LIBNAME) : $(LIBNAME_X86) $(LIBNAME_ARM)
+	lipo -create -output $(LIBNAME) $(LIBNAME_X86) $(LIBNAME_ARM)
+
+
+$(LIBNAME_X86) : $(OBJS_X86)
+	$(AR) $(ARFLAGS) $@ $(OBJS_X86)
+
+$(LIBNAME_ARM) : $(OBJS_ARM)
+	$(AR) $(ARFLAGS) $@ $(OBJS_ARM)
 
 examples: $(LIBNAME)
 	$(CC) $(CFLAGS) rn_decrypt.c -o rn_decrypt $(LIBS)
@@ -100,5 +123,6 @@ install-all:
 	$(INSTALL_PROGRAM) rn_encrypt_with_key ${DESTDIR}${bindir}
 
 clean:
+	rm -rf x86 arm
 	rm -f $(OBJS) *.o $(LIBNAME) rn_encrypt rn_decrypt rn_encrypt_with_key rn_decrypt_with_key \
 		tests/test_with_test_vectors
