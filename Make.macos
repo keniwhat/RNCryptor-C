@@ -37,9 +37,7 @@ MAN1DIR = $(DESTDIR)$(man1dir)
 
 MANPAGE= 
 
-OPENSSL_DIR=/usr/local/opt/openssl/
-OPENSSL_INC=-I/usr/local/opt/openssl/include
-OPENSSL_LIBS=-r$HOME/Projects/misc/openssl_universal -lssl -lcrypto 
+OPENSSL_INC=-I$(OPENSSLDIR)/include
 
 STRIP=/usr/bin/strip
 
@@ -49,7 +47,7 @@ DEFINES= $(INCLUDES) $(DEFS) -DHAVE_STRING_H=1 -DHAVE_STDLIB_H=1 \
 	-DHAVE_MATH_H=1
 
 CFLAGS= -g -O2 -Wall $(DEFINES)
-CFLAGS_X86 := $(CFLAGS) -target x86_64-apple-macos10.13
+CFLAGS_X86 := $(CFLAGS) -target x86_64-apple-macos11
 CFLAGS_ARM := $(CFLAGS) -target arm64-apple-macos11
 
 LIBS=$(LIBNAME)
